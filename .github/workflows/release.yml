@@ -1,0 +1,45 @@
+name: "handle_release"
+on:
+  push:
+    tags:
+      - 'rc-*.*.*'
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: '16.16.0'
+    - run: sh run-tests.sh
+    
+  build-docker:
+   needs: run-tests
+   runs-on: ubuntu-latest
+   steps:
+   - uses: actions/checkout@v3
+   - run: docker build . --tag $GITHUB_REF_NAME
+    
+  build-release:
+    needs: build-docker
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+    - run: sh build-release.sh
+  
+  fill-ticket:
+    needs: build-release
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: '16.16.0'
+    - env:
+        token: ${{ secrets.SECRET_TOKEN }}
+        xOrgId: ${{ secrets.X_ORG_ID }}
+        commits: ${{ toJSON(github.event.commits) }}
+      run: |
+        npm i
+        node fill-ticket.js

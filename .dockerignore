@@ -1,0 +1,12 @@
+node_modules
+.github
+.git
+.idea
+.gitignore
+.dockerfile
+.sh
+fill-ticket.js
+README.md
+tsconfig.json
+public
+src
